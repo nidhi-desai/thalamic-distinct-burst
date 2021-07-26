@@ -1,0 +1,24 @@
+% # iKLeak_TC_CV19:
+%
+% Potassium Leak current for generic thalamocortical relay cells used in
+% (Soplata et al., 2017).
+%
+% - References:
+%     - Soplata AE, McCarthy MM, Sherfey J, Lee S, Purdon PL, Brown EN, et al.
+%     Thalamocortical control of propofol phase-amplitude coupling. PLoS Comput
+%     Biol. 2017;13: e1005879. doi:10.1371/journal.pcbi.1005879
+%
+% - Tags: leak, current, intrinsic, thalamus, potassium, thalamocortical
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Parameters
+gKLeak = 0.014  % 0.014--DP; 0.028--HP mS/cm^2   %%%% original value 0.0172   %%%%%%% Destexhe suggests 6-8nS, using 8nS = 0.028 mS/cm2 (in a compartment with A= 29000um2)   because McCormick papers use higher values 15nS (otherwise no oscillatory behavior)
+EKLeak = -75 % -80 %-60 % -60--DP; -88--HP      % mV    %%%% original value -100   %%%%%%% modified to -105mV to match McCormick & Huguenard 1992 (taking it from McCormick & Prince 1987) (Destexhe didn't provide Evalue but refers to McC & Hug. 92
+% EKLeak choose to be -80 so that the resting potential of the cell reaches near -60 mV
+
+% Functions
+iKLeak_TC_CV19(X) = -gKLeak.*(X-EKLeak)
+
+monitor iKLeak_TC_CV19
+
+% Linker
+@current += iKLeak_TC_CV19(X)

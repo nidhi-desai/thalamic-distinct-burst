@@ -1,6 +1,6 @@
-function modellingEffectOfLatencyOn_TCSynapticDepression()
+function modellingEffectOfLatencyOnly_TCSynapticDepression()
 %% Description
-% This code run simulation for Section 3.7 figure 9e and 9f.
+% This code runs simulations for Section 3.7 figure 9e and 9f.
 % It simulates the release probability as a result of a thalamic burst with
 % one spike at different timepoints (based on latencies we observed in our in-vitro data)
 % by Nidhi Desai
@@ -28,9 +28,12 @@ counter = counter + 1;
 %% Setting up thalamo-cortical cell model for bursting
 [specification, popCounter, connCounter] = thalamocortical_bursts_model(specification,popCounter,connCounter,0,0,appCurrentVal,appCurrentTime); 
 [specification, ~, connCounter] = Benita_cortex_interneuron_model(specification, popCounter, connCounter);
+% [specification, popCounter, connCounter] = Benita_cortex_pyramidal_twoCompartment_model(specification, popCounter, connCounter);
 connCounter = connCounter + 1;
 specification.connections(connCounter).direction = 'IN<-TC';
-specification.connections(connCounter).mechanism_list = {'iAMPA_PyCdr_TC_ND20'};
+% specification.connections(connCounter).direction = 'PyCdr<-TC';
+specification.connections(connCounter).mechanism_list = {'iAMPA_IN_TC_ND20'};
+% specification.connections(connCounter).mechanism_list = {'iAMPA_PyCdr_TC_ND20'};
 
 %% Running simulation and
 data = dsSimulate(specification,'tspan',[0 totalSimulationTime]);

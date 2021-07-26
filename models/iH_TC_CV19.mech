@@ -1,0 +1,55 @@
+% # iH_TC_CV19:
+%
+% Hyperpolarization-activated cation "H-current", Hodgkin-Huxley-style, for
+% generic thalamocortical relay cells used in (Soplata et al., 2017).
+%
+% - References:
+%     - Soplata AE, McCarthy MM, Sherfey J, Lee S, Purdon PL, Brown EN, et al.
+%     Thalamocortical control of propofol phase-amplitude coupling. PLoS Comput
+%     Biol. 2017;13: e1005879. doi:10.1371/journal.pcbi.1005879
+%
+% - Requires: @CaBuffer_TC_AS17 calcium concentration exposed by
+%     "CaBuffer_TC_AS17" mechanism
+%
+% - Tags: calcium, current, intrinsic, thalamocortical, slow
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Parameters
+gH = 0.02 % mS/cm^2 %%%% original value 0.005 %%%%%%%%%%%% modified to match Destexhe et al
+gInc = 2   % unitless
+EH = -40   % mV
+
+OpenHIC = 0.6
+OpenHNoiseIC = 0.01
+PoneHIC = 0.0
+PoneHNoiseIC = 0.01
+OpenLockedHIC = 0.0
+OpenLockedHNoiseIC = 0.0
+
+Cac = 0.002
+nca = 4
+k2 = 0.0004
+k4 = 0.001
+pc = 0.007
+nexp = 1
+
+% Functions
+tauS(X) = 20 + 1000./(exp((X+71.5)./14.2) + exp((-(X+89))./11.6))
+Hinf(X) = 1./(1+exp((X+75)./5.5))
+alphaH(X) = Hinf(X)./tauS(X)
+betaH(X) = (1 - Hinf(X))./tauS(X)
+iH_TC_CV19(X,Open,Pone,OpenLocked) = -gH.*(Open + gInc.*OpenLocked).*(X-EH)
+
+monitor iH_TC_CV19
+
+% ODEs and ICs
+% Here, we implement the ODEs according to the same state variables as the
+%     original code, i.e., O, P1, and OL.
+Open' = alphaH(X).*(1 - Open - OpenLocked) - betaH(X).*Open
+Open(0) = OpenHIC+OpenHNoiseIC.*rand(1,Npop)
+Pone' = k2.*((@CaBuffer_TC_AS17./Cac).^nca).*(1-Pone) - k2.*Pone
+Pone(0) = PoneHIC+PoneHNoiseIC.*rand(1,Npop)
+OpenLocked' = k4.*(Pone./pc).^nexp.*Open - k4.*OpenLocked
+OpenLocked(0) = OpenLockedHIC+OpenLockedHNoiseIC.*rand(1,Npop)
+
+% Linker
+@current += iH_TC_CV19(X,Open,Pone,OpenLocked)
