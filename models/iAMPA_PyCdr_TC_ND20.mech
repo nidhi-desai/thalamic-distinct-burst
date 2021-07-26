@@ -1,0 +1,39 @@
+% # iAMPA_PyCdr_TC_ND20:
+%
+% AMPAergic synapse and synaptic depression between TC and PyC.
+%
+% - Reference: https://github.com/asoplata/dynasim-extended-benita-model
+        
+% Tags: synapse, AMPA, thalamo-cortical, synaptic depression
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Parameters
+gAMPA = 0.1 % mS/cm^2; given in Benita 2012 as gAMPA = 5.4 nS for IN<-PyC
+EAMPA = 1 % mV
+
+alpha = 3.48
+tauS = 2 % ms
+deprFactor = 0.65 % 0.58-0.7 (From Gil et.a;. 1997); 0.68(From Gil et.al. 1999 for TC->PyC); 0.9(From Benita et.al. 2012 for PyC->IN)
+tauRes = 400 % ms
+
+sAMPAIC = 0.1
+sAMPANoiseIC = 0.1
+resIC = 1
+resNoiseIC = 0.1
+
+% Functions
+% iAMPA_PyCdr_TC_ND20(X,sAMPA) = -gAMPA.*sAMPA.*(X-EAMPA)
+iAMPA_PyCdr_TC_ND20(X,sAMPA,res) = -gAMPA.*res.*sAMPA.*(X-EAMPA)
+
+% This is the resources state variable
+res' = (1 - res)./tauRes + ((t-tspike_pre)<=(2*dt)).*(-(1 - res)./tauRes + (deprFactor.*res - res)./dt)
+res(0) = resIC - resNoiseIC.*rand(1,N_pre)
+
+% Linker
+
+monitor iAMPA_PyCdr_TC_ND20
+
+% This is the synaptic activity state variable
+sAMPA' = alpha./(1 + exp(-(X_pre + 20)./2)) - sAMPA./tauS
+sAMPA(0) = sAMPAIC + sAMPANoiseIC.*rand(1,N_pre)
+@current += iAMPA_PyCdr_TC_ND20(X_post,sAMPA,res)
+% @current += iAMPA_PyCdr_TC_ND20(X_post,sAMPA)
